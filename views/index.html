@@ -18,7 +18,7 @@
           <input type="submit" value="Submit" />
         </form>
         <form action="/api/users" method="get">
-          <h2>See the list of all users</h2>
+          <h2>List all users</h2>
           <p><code>GET /api/users</code></p>
           <input type="submit" value="Show me the list of users" />
         </form>
@@ -30,6 +30,12 @@
           <input id="dur" type="text" name="duration" placeholder="duration* (mins.)" />
           <input id="date" type="text" name="date" placeholder="date (yyyy-mm-dd)" />
           <input type="submit" value="Submit" />
+        </form>
+        <form action="/api/users/:_id/logs" id="logall-form" method="get">
+          <h2>List all exercises of a user</h2>
+          <p><code>GET /api/users/:userid/logs</code></p>
+          <input id="uid-logall" type="text" name=":_id" placeholder=":_id of the user" />
+          <input type="submit" value="Show all exercises of the user" />
         </form>
       </div>
       <p>
@@ -47,6 +53,14 @@
         exerciseForm.action = `/api/users/${userId}/exercises`;
 
         exerciseForm.submit();
+      });
+
+      const logallForm = document.getElementById('logall-form');
+
+      logallForm.addEventListener('submit', () => {
+        const userId = document.getElementById('uid-logall').value;
+        logallForm.action = `/api/users/${userId}/logs`;
+        logallForm.submit();
       });
     </script>
   </body>

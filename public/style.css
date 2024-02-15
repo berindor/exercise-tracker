@@ -21,7 +21,7 @@ p {
   display: flex;
   flex-direction: column;
   flex-wrap: wrap;
-  height: 450px;
+  height: 600px;
 }
 
 form {

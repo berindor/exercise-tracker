@@ -99,7 +99,7 @@ app.post('/api/users/:userid/exercises', urlencodedParser, async (req, res) => {
           const dateString = createDateString(req.body.date);
           const exerciseData = {
             description: req.body.description,
-            duration: req.body.duration,
+            duration: Number(req.body.duration),
             date: dateString
           };
           await Exercises.create({ userid: user._id, username: user.username, ...exerciseData });
@@ -124,7 +124,7 @@ app.get('/api/users/:userid/logs', async (req, res) => {
         res.json({ error: 'User does not exist.' });
       } else {
         const exerciseList = await Exercises.find({ userid: user._id }, '-_id description duration date').lean();
-        res.json({ username: user.username, _id: user.userid, count: exerciseList.length, log: exerciseList });
+        res.json({ username: user.username, _id: user._id, count: exerciseList.length, log: exerciseList });
       }
     }
   } catch {
