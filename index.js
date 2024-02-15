@@ -28,6 +28,7 @@ const userSchema = new mongoose.Schema({
 });
 
 const exerciseSchema = new mongoose.Schema({
+  username: String,
   userid: String,
   description: String,
   duration: Number,
@@ -77,7 +78,6 @@ app.post('/api/users/:userid/exercises', urlencodedParser, async (req, res) => {
       return date.toDateString();
     }
   }
-
   if (!user) {
     res.json({ error: 'User does not exist.' });
   } else {
@@ -91,17 +91,36 @@ app.post('/api/users/:userid/exercises', urlencodedParser, async (req, res) => {
       res.json({ error: 'Invalid date.' });
     } else {
       const dateString = createDateString(req.body.date);
-      await Exercises.create({ userid: req.params.userid, description: req.body.description, duration: req.body.duration, date: dateString });
+      const exerciseData = {
+        description: req.body.description,
+        duration: req.body.duration,
+        date: dateString
+      };
+      await Exercises.create({ userid: user._id, username: user.username, ...exerciseData });
+      const responseObject = { _id: user._id, username: user.username, ...exerciseData };
+      res.json(responseObject);
     }
   }
 });
 
-//app.get('api/users/:userid/...')
-//({username: '', description: '', duration: '', date: '', userid: ''});
+app.get('/api/users/:userid/logs', async (req, res) => {
+  const user = await Users.findOne({ _id: req.params.userid });
+  if (!user) {
+    res.json({ error: 'User does not exist.' });
+  } else {
+    const exerciseList = await Exercises.find({ userid: user._id }, '-_id description duration date').lean();
+    res.json({ username: user.username, _id: user.userid, count: exerciseList.length, log: exerciseList });
+  }
+});
 
 //to remove test data
-app.get('/api/remove/tests', async (req, res) => {
+app.get('/api/remove/testuser', async (req, res) => {
   const nameToRemove = /^fcc/;
   const deleted = await Users.deleteMany({ username: nameToRemove });
   res.json({ removed: `${deleted.deletedCount} users` });
+});
+app.get('/api/remove/testexercise', async (req, res) => {
+  const nameToRemove = /^test/;
+  const deleted = await Exercises.deleteMany({ description: nameToRemove });
+  res.json({ removed: `${deleted.deletedCount} exercises` });
 });
