@@ -17,6 +17,13 @@ p {
   max-width: 900px;
 }
 
+.form-container {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  height: 450px;
+}
+
 form {
   margin-bottom: 25px;
   padding: 15px;

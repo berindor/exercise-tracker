@@ -56,7 +56,7 @@ app
   })
   .get(async (req, res) => {
     const userList = await Users.find({});
-    res.json({ users: userList });
+    res.json(userList);
     return userList;
   });
 
