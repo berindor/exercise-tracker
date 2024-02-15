@@ -62,6 +62,22 @@ app
 
 app.post('/api/users/:userid/exercises', urlencodedParser, async (req, res) => {
   let user = await Users.findOne({ _id: req.params.userid });
+  function createDateString(dateInput) {
+    const dateRegex = /\d{4}-\d{2}-\d{2}/;
+    if (dateInput === '') {
+      const date = new Date();
+      return date.toDateString();
+    } else if (!dateRegex.test(dateInput)) {
+      return 'Invalid format';
+    } else {
+      const date = new Date(dateInput);
+      if (date.toString() === 'Invalid Date') {
+        return 'Invalid date';
+      }
+      return date.toDateString();
+    }
+  }
+
   if (!user) {
     res.json({ error: 'User does not exist.' });
   } else {
@@ -69,9 +85,13 @@ app.post('/api/users/:userid/exercises', urlencodedParser, async (req, res) => {
       res.json({ error: 'Description is mandatory.' });
     } else if (!req.body.duration) {
       res.json({ error: 'Duration is mandatory.' });
+    } else if (createDateString(req.body.date) === 'Invalid format') {
+      res.json({ error: 'Invalid time format.' });
+    } else if (createDateString(req.body.date) === 'Invalid date') {
+      res.json({ error: 'Invalid date.' });
     } else {
-      const date = req.body.date; //need to be Date format and now, if empty
-      await Exercises.create({ userid: req.params.userid, description: req.body.description, duration: req.body.duration, date });
+      const dateString = createDateString(req.body.date);
+      await Exercises.create({ userid: req.params.userid, description: req.body.description, duration: req.body.duration, date: dateString });
     }
   }
 });
