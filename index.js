@@ -56,7 +56,7 @@ app
     }
   })
   .get(async (req, res) => {
-    const userList = await Users.find({});
+    const userList = await Users.find({}, '-__v');
     res.json(userList);
     return userList;
   });
@@ -119,7 +119,7 @@ app.get('/api/users/:userid/logs', async (req, res) => {
     if (!isValidIdFormat) {
       res.json({ error: 'Invalid user id format.' });
     } else {
-      const user = await Users.findOne({ _id: req.params.userid });
+      const user = await Users.findById(req.params.userid);
       if (!user) {
         res.json({ error: 'User does not exist.' });
       } else {
