@@ -61,55 +61,74 @@ app
     return userList;
   });
 
-app.post('/api/users/:userid/exercises', urlencodedParser, async (req, res) => {
-  let user = await Users.findOne({ _id: req.params.userid });
-  function createDateString(dateInput) {
-    const dateRegex = /\d{4}-\d{2}-\d{2}/;
-    if (dateInput === '') {
-      const date = new Date();
-      return date.toDateString();
-    } else if (!dateRegex.test(dateInput)) {
-      return 'Invalid format';
-    } else {
-      const date = new Date(dateInput);
-      if (date.toString() === 'Invalid Date') {
-        return 'Invalid date';
-      }
-      return date.toDateString();
-    }
-  }
-  if (!user) {
-    res.json({ error: 'User does not exist.' });
+function createDateString(dateInput) {
+  const dateRegex = /\d{4}-\d{2}-\d{2}/;
+  if (dateInput === '') {
+    const date = new Date();
+    return date.toDateString();
+  } else if (!dateRegex.test(dateInput)) {
+    return 'Invalid format';
   } else {
-    if (!req.body.description) {
-      res.json({ error: 'Description is mandatory.' });
-    } else if (!req.body.duration) {
-      res.json({ error: 'Duration is mandatory.' });
-    } else if (createDateString(req.body.date) === 'Invalid format') {
-      res.json({ error: 'Invalid time format.' });
-    } else if (createDateString(req.body.date) === 'Invalid date') {
-      res.json({ error: 'Invalid date.' });
-    } else {
-      const dateString = createDateString(req.body.date);
-      const exerciseData = {
-        description: req.body.description,
-        duration: req.body.duration,
-        date: dateString
-      };
-      await Exercises.create({ userid: user._id, username: user.username, ...exerciseData });
-      const responseObject = { _id: user._id, username: user.username, ...exerciseData };
-      res.json(responseObject);
+    const date = new Date(dateInput);
+    if (date.toString() === 'Invalid Date') {
+      return 'Invalid date';
     }
+    return date.toDateString();
+  }
+}
+
+app.post('/api/users/:userid/exercises', urlencodedParser, async (req, res) => {
+  try {
+    const isValidIdFormat = mongoose.Types.ObjectId.isValid(req.params.userid);
+    if (!isValidIdFormat) {
+      res.json({ error: 'Invalid user id format.' });
+    } else {
+      const user = await Users.findById(req.params.userid);
+      if (!user) {
+        res.json({ error: 'User does not exist.' });
+      } else {
+        if (!req.body.description) {
+          res.json({ error: 'Description is mandatory.' });
+        } else if (!req.body.duration) {
+          res.json({ error: 'Duration is mandatory.' });
+        } else if (createDateString(req.body.date) === 'Invalid format') {
+          res.json({ error: 'Invalid time format.' });
+        } else if (createDateString(req.body.date) === 'Invalid date') {
+          res.json({ error: 'Invalid date.' });
+        } else {
+          const dateString = createDateString(req.body.date);
+          const exerciseData = {
+            description: req.body.description,
+            duration: req.body.duration,
+            date: dateString
+          };
+          await Exercises.create({ userid: user._id, username: user.username, ...exerciseData });
+          const responseObject = { _id: user._id, username: user.username, ...exerciseData };
+          res.json(responseObject);
+        }
+      }
+    }
+  } catch {
+    res.sendStatus(500);
   }
 });
 
 app.get('/api/users/:userid/logs', async (req, res) => {
-  const user = await Users.findOne({ _id: req.params.userid });
-  if (!user) {
-    res.json({ error: 'User does not exist.' });
-  } else {
-    const exerciseList = await Exercises.find({ userid: user._id }, '-_id description duration date').lean();
-    res.json({ username: user.username, _id: user.userid, count: exerciseList.length, log: exerciseList });
+  try {
+    const isValidIdFormat = mongoose.Types.ObjectId.isValid(req.params.userid);
+    if (!isValidIdFormat) {
+      res.json({ error: 'Invalid user id format.' });
+    } else {
+      const user = await Users.findOne({ _id: req.params.userid });
+      if (!user) {
+        res.json({ error: 'User does not exist.' });
+      } else {
+        const exerciseList = await Exercises.find({ userid: user._id }, '-_id description duration date').lean();
+        res.json({ username: user.username, _id: user.userid, count: exerciseList.length, log: exerciseList });
+      }
+    }
+  } catch {
+    res.sendStatus(500);
   }
 });
 
