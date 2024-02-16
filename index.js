@@ -63,7 +63,7 @@ app
 
 function createDateString(dateInput) {
   const dateRegex = /\d{4}-\d{2}-\d{2}/;
-  if (dateInput === '') {
+  if (dateInput === '' || dateInput === undefined) {
     const date = new Date();
     return date.toDateString();
   } else if (!dateRegex.test(dateInput)) {
