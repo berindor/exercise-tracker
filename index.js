@@ -111,6 +111,7 @@ app.post('/api/users/:userid/exercises', urlencodedParser, async (req, res) => {
       }
       if (dateFormatChecker(req.body.date, 'date') !== '') {
         res.json(dateFormatChecker(req.body.date, 'date'));
+        return;
       }
       const dateString = createDateString(req.body.date);
       const exerciseData = {
@@ -126,6 +127,26 @@ app.post('/api/users/:userid/exercises', urlencodedParser, async (req, res) => {
     res.sendStatus(500);
   }
 });
+
+function isDateInInterval(dateString, from, to) {
+  let isInInt = true;
+  const dateToTest = new Date(dateString).valueOf();
+  const dateFrom = new Date(from);
+  const fromValue = new Date(dateFrom.toDateString()).valueOf();
+  const dateTo = new Date(to);
+  const toValue = new Date(dateTo.toDateString()).valueOf();
+  if (from !== '' && from !== undefined) {
+    if (dateToTest < fromValue) {
+      isInInt = false;
+    }
+  }
+  if (to !== '' && to !== undefined) {
+    if (dateToTest > toValue) {
+      isInInt = false;
+    }
+  }
+  return isInInt;
+}
 
 app.get('/api/users/:userid/logs', async (req, res) => {
   try {
@@ -143,7 +164,6 @@ app.get('/api/users/:userid/logs', async (req, res) => {
     const from = req.query.from;
     const to = req.query.to;
     const limit = req.query.limit;
-    console.log('limit: ', limit, 'number: ', Number(limit), 'string: ', Number(limit).toString(), 'true? ', limit === Number(limit).toString());
     if (dateFormatChecker(from, 'from') !== '') {
       res.json(dateFormatChecker(from, 'from'));
       return;
@@ -156,10 +176,10 @@ app.get('/api/users/:userid/logs', async (req, res) => {
       res.json({ error: 'The limit must be a number or empty.' });
       return;
     }
-    let dateFilteredList = allExerciseList;
-    let exerciseList = dateFilteredList;
+    let exerciseListFilteredByDate = allExerciseList.filter(({ date }) => isDateInInterval(date, from, to));
+    let exerciseList = exerciseListFilteredByDate;
     if (limit === Number(limit).toString() && limit !== 'NaN') {
-      exerciseList = dateFilteredList.slice(0, Number(limit));
+      exerciseList = exerciseListFilteredByDate.slice(0, Number(limit));
     }
     res.json({ username: user.username, _id: user._id, count: exerciseList.length, log: exerciseList });
   } catch {
