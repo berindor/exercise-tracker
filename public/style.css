@@ -11,6 +11,7 @@ body {
 
 h1 {
   font-weight: bold;
+  text-align: center;
 }
 
 p {
@@ -21,6 +22,7 @@ p {
   display: flex;
   flex-direction: column;
   flex-wrap: wrap;
+  align-items: center;
   height: 600px;
 }
 

@@ -77,36 +77,50 @@ function createDateString(dateInput) {
   }
 }
 
+function dateFormatChecker(dateInput, fieldName) {
+  if (dateInput === '' || dateInput === undefined) {
+    return '';
+  }
+  if (createDateString(dateInput) === 'Invalid format') {
+    return { error: `Invalid date format in ${fieldName} field.` };
+  }
+  if (createDateString(dateInput) === 'Invalid date') {
+    return { error: `Invalid date in ${fieldName} field.` };
+  }
+  return '';
+}
+
 app.post('/api/users/:userid/exercises', urlencodedParser, async (req, res) => {
   try {
     const isValidIdFormat = mongoose.Types.ObjectId.isValid(req.params.userid);
     if (!isValidIdFormat) {
       res.json({ error: 'Invalid user id format.' });
+      return;
+    }
+    const user = await Users.findById(req.params.userid);
+    if (!user) {
+      res.json({ error: 'User does not exist.' });
     } else {
-      const user = await Users.findById(req.params.userid);
-      if (!user) {
-        res.json({ error: 'User does not exist.' });
-      } else {
-        if (!req.body.description) {
-          res.json({ error: 'Description is mandatory.' });
-        } else if (!req.body.duration) {
-          res.json({ error: 'Duration is mandatory.' });
-        } else if (createDateString(req.body.date) === 'Invalid format') {
-          res.json({ error: 'Invalid time format.' });
-        } else if (createDateString(req.body.date) === 'Invalid date') {
-          res.json({ error: 'Invalid date.' });
-        } else {
-          const dateString = createDateString(req.body.date);
-          const exerciseData = {
-            description: req.body.description,
-            duration: Number(req.body.duration),
-            date: dateString
-          };
-          await Exercises.create({ userid: user._id, username: user.username, ...exerciseData });
-          const responseObject = { _id: user._id, username: user.username, ...exerciseData };
-          res.json(responseObject);
-        }
+      if (!req.body.description) {
+        res.json({ error: 'Description is mandatory.' });
+        return;
       }
+      if (!req.body.duration) {
+        res.json({ error: 'Duration is mandatory.' });
+        return;
+      }
+      if (dateFormatChecker(req.body.date, 'date') !== '') {
+        res.json(dateFormatChecker(req.body.date, 'date'));
+      }
+      const dateString = createDateString(req.body.date);
+      const exerciseData = {
+        description: req.body.description,
+        duration: Number(req.body.duration),
+        date: dateString
+      };
+      await Exercises.create({ userid: user._id, username: user.username, ...exerciseData });
+      const responseObject = { _id: user._id, username: user.username, ...exerciseData };
+      res.json(responseObject);
     }
   } catch {
     res.sendStatus(500);
@@ -118,15 +132,36 @@ app.get('/api/users/:userid/logs', async (req, res) => {
     const isValidIdFormat = mongoose.Types.ObjectId.isValid(req.params.userid);
     if (!isValidIdFormat) {
       res.json({ error: 'Invalid user id format.' });
-    } else {
-      const user = await Users.findById(req.params.userid);
-      if (!user) {
-        res.json({ error: 'User does not exist.' });
-      } else {
-        const exerciseList = await Exercises.find({ userid: user._id }, '-_id description duration date').lean();
-        res.json({ username: user.username, _id: user._id, count: exerciseList.length, log: exerciseList });
-      }
+      return;
     }
+    const user = await Users.findById(req.params.userid);
+    if (!user) {
+      res.json({ error: 'User does not exist.' });
+      return;
+    }
+    const allExerciseList = await Exercises.find({ userid: user._id }, '-_id description duration date').lean();
+    const from = req.query.from;
+    const to = req.query.to;
+    const limit = req.query.limit;
+    console.log('limit: ', limit, 'number: ', Number(limit), 'string: ', Number(limit).toString(), 'true? ', limit === Number(limit).toString());
+    if (dateFormatChecker(from, 'from') !== '') {
+      res.json(dateFormatChecker(from, 'from'));
+      return;
+    }
+    if (dateFormatChecker(to, 'to') !== '') {
+      res.json(dateFormatChecker(to, 'to'));
+      return;
+    }
+    if (limit === 'NaN' || (limit !== Number(limit).toString() && limit !== '' && limit !== undefined)) {
+      res.json({ error: 'The limit must be a number or empty.' });
+      return;
+    }
+    let dateFilteredList = allExerciseList;
+    let exerciseList = dateFilteredList;
+    if (limit === Number(limit).toString() && limit !== 'NaN') {
+      exerciseList = dateFilteredList.slice(0, Number(limit));
+    }
+    res.json({ username: user.username, _id: user._id, count: exerciseList.length, log: exerciseList });
   } catch {
     res.sendStatus(500);
   }

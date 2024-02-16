@@ -17,33 +17,31 @@
           <input id="uname" type="text" name="username" placeholder="username" />
           <input type="submit" value="Submit" />
         </form>
-        <form action="/api/users" method="get">
-          <h2>List all users</h2>
-          <p><code>GET /api/users</code></p>
-          <input type="submit" value="Show me the list of users" />
-        </form>
         <form action="/api/users/:_id/exercises" id="exercise-form" method="post">
           <h2>Add exercises</h2>
           <p><code>POST /api/users/:_id/exercises</code></p>
-          <input id="uid" type="text" name=":_id" placeholder=":_id of the user" />
+          <input id="uid" type="text" name=":_id" placeholder=":_id of the user*" />
           <input id="desc" type="text" name="description" placeholder="description*" />
           <input id="dur" type="text" name="duration" placeholder="duration* (mins.)" />
           <input id="date" type="text" name="date" placeholder="date (yyyy-mm-dd)" />
           <input type="submit" value="Submit" />
         </form>
-        <form action="/api/users/:_id/logs" id="logall-form" method="get">
-          <h2>List all exercises of a user</h2>
-          <p><code>GET /api/users/:userid/logs</code></p>
-          <input id="uid-logall" type="text" name=":_id" placeholder=":_id of the user" />
-          <input type="submit" value="Show all exercises of the user" />
+        <form action="/api/users" method="get">
+          <h2>List all users</h2>
+          <p><code>GET /api/users</code></p>
+          <input type="submit" value="Show the list of users" />
+        </form>
+        <form action="/api/users/:_id/logs" id="log-form" method="get">
+          <h2>List exercises of a user</h2>
+          <p><code>GET /api/users/:userid/logs?[from][&amp;to][&amp;limit]</code></p>
+          <input id="log-uid" type="text" name=":_id" placeholder=":_id of the user*" />
+          <input id="log-from" type="text" name="from" placeholder="from date (yyyy-mm-dd)" />
+          <input id="log-to" type="text" name="to" placeholder="to date (yyyy-mm-dd)" />
+          <input id="log-limit" type="text" name="limit" placeholder="limit of number of logs (number)" />
+          <input type="submit" value="Show exercises of the user" />
         </form>
       </div>
-      <p>
-        <strong>GET user's exercise log: </strong>
-        <code>GET /api/users/:_id/logs?[from][&amp;to][&amp;limit]</code>
-      </p>
       <p><strong>*</strong> = required, <strong>[ ]</strong> = optional</p>
-      <p><strong>from, to</strong> = dates (yyyy-mm-dd); <strong>limit</strong> = number</p>
     </div>
     <script>
       const exerciseForm = document.getElementById('exercise-form');
@@ -55,12 +53,12 @@
         exerciseForm.submit();
       });
 
-      const logallForm = document.getElementById('logall-form');
+      const logForm = document.getElementById('log-form');
 
-      logallForm.addEventListener('submit', () => {
-        const userId = document.getElementById('uid-logall').value;
-        logallForm.action = `/api/users/${userId}/logs`;
-        logallForm.submit();
+      logForm.addEventListener('submit', () => {
+        const userId = document.getElementById('log-uid').value;
+        logForm.action = `/api/users/${userId}/logs`;
+        logForm.submit();
       });
     </script>
   </body>
